@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제1구역: 심연의 수조</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+KR:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #050507;
+            --panel-glass: rgba(20, 20, 25, 0.85);
+            --point-purple: #6200ea; /* 하늘색 대신 사용할 메인 컬러 */
+            --sub-purple: #b388ff;
+            --text-silver: #e0e0e2;
+            --text-dark: #707075;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-silver);
+            font-family: 'Noto Sans KR', sans-serif;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            /* 배경 그라데이션 */
+            background: radial-gradient(circle at center, #101018 0%, #050507 100%);
+        }
+
+        /* 상단 HUD: 더 미니멀하고 세련되게 */
+        #status-bar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding: 25px 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
+            z-index: 100;
+        }
+
+        .stat-item { text-align: center; }
+        .stat-label { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem; 
+            color: var(--text-dark); 
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+        .stat-value { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            color: var(--sub-purple);
+        }
+
+        /* 메인 게임 프레임 */
+        #game-container {
+            width: 85%;
+            max-width: 550px;
+            background: var(--panel-glass);
+            backdrop-filter: blur(20px);
+            padding: 50px;
+            border-radius: 2px; /* 현대적인 직선미 강조 */
+            border-left: 1px solid rgba(179, 136, 255, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 20px 20px 60px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        /* 이미지 영역 */
+        #title-image-container {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 35px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+        #game-image { width: 100%; height: 100%; object-fit: cover; display: none; opacity: 0.7; }
+        .img-placeholder { 
+            color: #222; 
+            font-family: 'Orbitron', sans-serif; 
+            font-size: 0.8rem; 
+            display: flex; align-items: center; justify-content: center; height: 100%;
+        }
+
+        #scene-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        #description {
+            font-size: 1rem;
+            line-height: 1.9;
+            color: #b0b0b5;
+            margin-bottom: 40px;
+            font-weight: 300;
+            word-break: keep-all;
+        }
+
+        /* 현대적인 고스트 버튼 */
+        #choices { display: flex; flex-direction: column; gap: 15px; }
+
+        button {
+            background: transparent;
+            color: var(--text-silver);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 18px 25px;
+            font-size: 0.9rem;
+            font-family: 'Noto Sans KR', sans-serif;
+            cursor: pointer;
+            transition: all 0.4s;
+            text-align: left;
+            letter-spacing: 1px;
+            position: relative;
+        }
+
+        button:hover {
+            border-color: var(--sub-purple);
+            background: rgba(98, 0, 234, 0.05);
+            padding-left: 35px;
+            color: #fff;
+        }
+
+        button::after {
+            content: "";
+            position: absolute;
+            left: 0; top: 0; width: 0; height: 100%;
+            background: var(--point-purple);
+            transition: 0.4s;
+            z-index: -1;
+            opacity: 0.2;
+        }
+        button:hover::after { width: 100%; }
+
+        /* 무거운 에러 연출 */
+        .error-mode {
+            animation: glitch-heavy 0.2s infinite;
+            border-color: #ff1744 !important;
+        }
+
+        @keyframes glitch-heavy {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="status-bar">
+        <div class="stat-item"><div class="stat-label">KARMA</div><span id="karma" class="stat-value">0</span></div>
+        <div class="stat-item"><div class="stat-label">GREED</div><span id="greed" class="stat-value">0</span></div>
+        <div class="stat-item"><div class="stat-label">ASSET</div><span id="asset" class="stat-value">0</span></div>
+        <div class="stat-item"><div class="stat-label">NOISE</div><span id="noise" class="stat-value">0</span></div>
+    </div>
+
+    <div id="game-container">
+        <div id="title-image-container">
+            <img id="game-image" src="" alt="scene">
+            <div id="placeholder" class="img-placeholder">DATA_VISUALIZING...</div>
+        </div>
+
+        <div id="scene-title">INITIATING...</div>
+        <div id="description">시스템 로그를 대기 중입니다.</div>
+        <div id="choices"></div>
+    </div>
+
+    <script>
+        let state = { karma: 0, greed: 0, asset: 0, noise: 0, isError: false };
+
+        const scenes = {
+            start: {
+                title: "PHASE 01: DISCOVERY",
+                desc: "심연의 수조가 발견되었습니다. 이 장치는 투입된 데이터의 가치를 수천 배로 복제합니다. 당신의 첫 번째 명령을 입력하십시오.",
+                choices: [
+                    { text: "정화 프로토콜 실행 후 접속", effect: { karma: 20 }, next: "s2" },
+                    { text: "보안 강제 우회 및 즉시 기동", effect: { greed: 15 }, next: "s2" }
+                ]
+            },
+            s2: {
+                title: "PHASE 02: REPLICATION",
+                desc: "복제 프로세스가 성공적으로 시작되었습니다. 자산 수치가 기하급수적으로 증가하며, 시스템 소음이 발생하기 시작합니다.",
+                choices: [
+                    { text: "가속 모드: 최대 출력 복제", effect: { asset: 200, greed: 40, noise: 20 }, next: "s3" },
+                    { text: "안정 모드: 저전력 유지", effect: { asset: 50, karma: 15 }, next: "s3" }
+                ]
+            },
+            s3: {
+                title: "PHASE 03: CONFLICT",
+                desc: "외부 개입 감지. 관리자 'JACK'이 소유권을 주장하며 접근합니다. '이 지하 구역의 모든 데이터는 내 것이다.'",
+                choices: [
+                    { text: "관리자 권한 방어 및 대항", effect: { karma: 15 }, next: "s4" },
+                    { text: "자산 데이터 일부 전송 (회유)", effect: { asset: -100, greed: 20 }, next: "s4" }
+                ]
+            },
+            s4: {
+                title: "PHASE 04: SYSTEM COLLAPSE",
+                desc: "생체 데이터 유입! 아버지가 수조에 빠지며 인과율 오류가 발생했습니다. 수백 명의 아버지가 데이터화되어 쏟아집니다.",
+                choices: [
+                    { text: "수조 파괴 및 프로세스 종료", effect: { asset: 0, karma: 40 }, next: "s5", action: "stop" },
+                    { text: "오류 무시 및 복제 자산 수거", effect: { greed: 50, noise: 50 }, next: "s5", action: "start" }
+                ]
+            },
+            s5: {
+                title: "PHASE 05: FINAL JUDGMENT",
+                desc: "최상위 개체 '소년'이 강림했습니다. 당신의 업보와 탐욕의 무게를 대조하여 최종 로그를 출력합니다.",
+                choices: [
+                    { text: "최종 리포트 열람", next: "final" }
+                ]
+            }
+        };
+
+        function updateUI() {
+            document.getElementById('karma').innerText = state.karma;
+            document.getElementById('greed').innerText = state.greed;
+            document.getElementById('asset').innerText = state.asset;
+            document.getElementById('noise').innerText = state.noise;
+
+            const container = document.getElementById('game-container');
+            if(state.isError) container.classList.add('error-mode');
+            else container.classList.remove('error-mode');
+        }
+
+        function renderScene(sceneId) {
+            if (sceneId === "final") {
+                calculateEnding();
+                return;
+            }
+            const scene = scenes[sceneId];
+            document.getElementById('scene-title').innerText = scene.title;
+            document.getElementById('description').innerText = scene.desc;
+            
+            const choicesContainer = document.getElementById('choices');
+            choicesContainer.innerHTML = '';
+
+            scene.choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.innerText = choice.text;
+                btn.onclick = () => {
+                    if (choice.effect) {
+                        for (let key in choice.effect) { state[key] += choice.effect[key]; }
+                    }
+                    if (choice.action === "start") state.isError = true;
+                    if (choice.action === "stop") state.isError = false;
+                    updateUI();
+                    renderScene(choice.next);
+                };
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        function calculateEnding() {
+            let title, desc, color;
+            if (state.greed > state.karma + 30) {
+                title = "LOG: VOID";
+                desc = "탐욕의 임계점을 넘었습니다. 당신의 존재 정보는 심연으로 영구 격리됩니다.";
+                color = "#ff1744";
+            } else if (state.karma >= 60) {
+                title = "LOG: ASCENSION";
+                desc = "선명한 업보를 증명했습니다. 당신은 수조의 정당한 관리자로 승인되었습니다.";
+                color = "#b388ff";
+            } else {
+                title = "LOG: RESET";
+                desc = "모든 데이터가 소실되었습니다. 빈손으로 돌아가 다시 시작하십시오.";
+                color = "#e0e0e2";
+            }
+            document.getElementById('scene-title').innerText = title;
+            document.getElementById('scene-title').style.color = color;
+            document.getElementById('description').innerText = desc;
+            document.getElementById('choices').innerHTML = '<button onclick="location.reload()">REBOOT SYSTEM</button>';
+            state.isError = false;
+            updateUI();
+        }
+
+        renderScene('start');
+    </script>
+</body>
+</html>
