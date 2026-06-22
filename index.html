@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제1구역: 심연의 수조</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep:#0a0a12;
+  --panel-glass:rgba(13,13,23,0.85);
+  --sub-purple:#a277ff;
+  --neon-blue:#00f0ff;
+  --neon-pink:#ff007f;
+  --text-silver:#f5f5f7;
+  --text-dark:#6e6e73;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background: radial-gradient(circle at 50% 30%, #16122c, #06060c);
+  color:var(--text-silver);
+  font-family:'Noto Sans KR',sans-serif;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:80px 20px 40px;
+  overflow-x:hidden;
+}
+#boot-overlay{
+  position:fixed;inset:0;
+  background:#000;
+  z-index:999;
+  transition: opacity 1s ease, visibility 1s ease;
+  overflow: hidden;
+}
+#boot-video {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transform: translate(-50%, -50%);
+  opacity: 0.65;
+  z-index: 1;
+}
+#boot-overlay.is-hidden { opacity: 0; visibility: hidden; }
+.boot-meta-box {
+  position: absolute;
+  bottom: 60px; right: 60px;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  z-index: 2;
+  background: rgba(10, 10, 18, 0.6);
+  padding: 20px;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+#boot-game-title{
+  font-family:'Noto Sans KR',sans-serif;
+  font-size:2.6rem;
+  font-weight:700;
+  letter-spacing:10px;
+  margin-bottom:14px;
+  background: linear-gradient(135deg, #ffffff 0%, #c8aaff 40%, #00f0ff 70%, #a277ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 12px rgba(162,119,255,0.9)) drop-shadow(0 0 30px rgba(0,240,255,0.5));
+  animation: title-breathe 3s ease-in-out infinite;
+}
+@keyframes title-breathe {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(162,119,255,0.8)) drop-shadow(0 0 25px rgba(0,240,255,0.4)); }
+  50%       { filter: drop-shadow(0 0 22px rgba(162,119,255,1))   drop-shadow(0 0 50px rgba(0,240,255,0.8)); }
+}
+#boot-id{ font-family:Orbitron; font-size:1.3rem; color:#a277ff; text-shadow:0 0 15px rgba(162,119,255,0.8); letter-spacing: 1px; }
+#boot-name{ font-size:1.05rem; color:#00f0ff; font-weight: 700; letter-spacing: 1px; text-shadow:0 0 10px rgba(0,240,255,0.5); }
+.start-system-btn {
+  margin-top: 15px;
+  padding: 14px 32px;
+  border-radius: 8px;
+  border: 2px solid var(--neon-blue);
+  background: rgba(0, 240, 255, 0.1);
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.3), inset 0 0 10px rgba(0, 240, 255, 0.2);
+}
+.start-system-btn:hover {
+  background: var(--neon-blue);
+  color: #000;
+  box-shadow: 0 0 35px var(--neon-blue), 0 0 15px rgba(255,255,255,0.7);
+  transform: scale(1.05) translateY(-2px);
+}
+#status-bar{
+  position:fixed;
+  top:0;left:50%;
+  transform:translateX(-50%);
+  width:100%; max-width:650px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  padding:15px 20px;
+  background:rgba(10,10,18,0.9);
+  backdrop-filter:blur(15px);
+  border-bottom:2px solid rgba(0, 240, 255, 0.3);
+  border-radius:0 0 16px 16px;
+  z-index:100;
+  box-shadow: 0 5px 20px rgba(0, 240, 255, 0.1);
+}
+.stat-item{text-align:center;}
+.stat-label{ font-size:0.65rem; color:var(--text-dark); font-family:Orbitron; letter-spacing: 1px; }
+.stat-value{ font-family:Orbitron; color:var(--neon-blue); font-weight:800; text-shadow: 0 0 8px rgba(0, 240, 255, 0.5); }
+#game-container{
+  width:100%; max-width:650px;
+  background:var(--panel-glass);
+  backdrop-filter:blur(25px);
+  padding:30px;
+  border-radius:24px;
+  border: 1px solid rgba(162, 119, 255, 0.2);
+  position: relative;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 30px rgba(162, 119, 255, 0.05);
+}
+#game-container::before {
+  content: '';
+  position: absolute;
+  top: 15px; left: 15px;
+  width: 20px; height: 20px;
+  border-top: 2px solid var(--neon-blue);
+  border-left: 2px solid var(--neon-blue);
+}
+#game-container::after {
+  content: '';
+  position: absolute;
+  bottom: 15px; right: 15px;
+  width: 20px; height: 20px;
+  border-bottom: 2px solid var(--sub-purple);
+  border-right: 2px solid var(--sub-purple);
+}
+#title-image-container{
+  height:380px;
+  background:#000;
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:20px;
+  position:relative;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
+}
+#game-video{ width:100%; height:100%; object-fit:cover; display:none; }
+.img-placeholder{
+  position:absolute; inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:#555;
+  font-family:Orbitron;
+  font-size:0.9rem;
+  letter-spacing: 3px;
+}
+.text-section {
+  border-left: 3px solid var(--neon-blue);
+  padding-left: 15px;
+  margin-bottom: 25px;
+}
+#scene-title{
+  font-family:Orbitron;
+  font-size:1.3rem;
+  margin-bottom:6px;
+  background:linear-gradient(45deg,#fff, var(--neon-blue), #a277ff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.ui-divider { height: 1px; background: linear-gradient(90deg, rgba(0,240,255,0.4), transparent); margin-bottom: 10px; }
+#description{ font-size:0.95rem; line-height:1.6; color:#d1d1d6; white-space: pre-line; }
+#choices{display:flex;flex-direction:column;gap:12px;}
+button{
+  padding:18px 24px;
+  border-radius:14px;
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  background: linear-gradient(135deg, rgba(30, 16, 60, 0.7), rgba(11, 44, 70, 0.7));
+  color:#ffffff;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor:pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  text-align:left;
+  position:relative;
+  overflow:hidden;
+  letter-spacing: 0.5px;
+  box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.1), 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+button:hover{
+  transform: translateY(-2px);
+  color: #ffffff;
+  border-color: #ffffff;
+  background: linear-gradient(135deg, rgba(162, 119, 255, 0.3), rgba(0, 240, 255, 0.25));
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.6), 0 0 10px rgba(162, 119, 255, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.2);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+button::after{
+  content:"";
+  position:absolute;
+  top:-50%; left:-60%;
+  width:220%; height:220%;
+  background:linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.4), rgba(0, 240, 255, 0.6), transparent);
+  transform:rotate(30deg);
+  opacity:0;
+}
+button:hover::after{ animation:scan 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite; opacity:1; }
+.error-mode {
+  animation: glitch-heavy 0.2s infinite;
+  border-color: var(--neon-pink) !important;
+  box-shadow: 0 0 30px var(--neon-pink) !important;
+}
+@keyframes glitch-heavy {
+  0%   { transform: translate(0); }
+  20%  { transform: translate(-3px, 2px); }
+  40%  { transform: translate(-2px, -3px); }
+  60%  { transform: translate(3px, 2px); }
+  80%  { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+@keyframes scan{ from{transform:translateX(-40%) rotate(30deg);} to{transform:translateX(40%) rotate(30deg);} }
+</style>
+</head>
+<body>
+
+<div id="boot-overlay">
+  <video id="boot-video" src="media/open.mp4" autoplay loop muted playsinline></video>
+  <div class="boot-meta-box">
+    <div id="boot-game-title">심연의 수조</div>
+    <div id="boot-id">25730001</div>
+    <div id="boot-name">이인아</div>
+    <button class="start-system-btn" onclick="startSystem()">SYSTEM START</button>
+  </div>
+</div>
+
+<div id="status-bar">
+  <div class="stat-item"><div class="stat-label">KARMA</div><div id="karma" class="stat-value">0</div></div>
+  <div class="stat-item"><div class="stat-label">GREED</div><div id="greed" class="stat-value">0</div></div>
+  <div class="stat-item"><div class="stat-label">ASSET</div><div id="asset" class="stat-value">0</div></div>
+  <div class="stat-item"><div class="stat-label">NOISE</div><div id="noise" class="stat-value">0</div></div>
+</div>
+
+<div id="game-container">
+  <div id="title-image-container">
+    <video id="game-video" autoplay loop muted playsinline></video>
+    <div class="img-placeholder" id="placeholder">DATA_VISUALIZING...</div>
+  </div>
+  <div class="text-section">
+    <div id="scene-title">INIT</div>
+    <div class="ui-divider"></div>
+    <div id="description">...</div>
+  </div>
+  <div id="choices"></div>
+</div>
+
+<script>
+let state = { karma: 0, greed: 0, asset: 0, noise: 0, isError: false };
+
+const scenes = {
+  s1: {
+    title: "PHASE 01 : 조심스러운 탐색",
+    desc: "심연의 수조가 발견되었습니다. 이 장치는 투입된 데이터의 가치를 수천 배로 복제합니다.\n당신의 첫 번째 명령을 입력하십시오.",
+    video: "media/s1.mp4",
+    choices: [
+      { text: "정화 프로토콜 실행 후 접속", effect: { karma: 20 }, next: "s2", action: "stop" },
+      { text: "보안 강제 우회 및 즉시 기동", effect: { greed: 15 }, next: "s2", action: "start" }
+    ]
+  },
+  s2: {
+    title: "PHASE 02 : 광기의 폭발",
+    desc: "복제 프로세스가 성공적으로 시작되었습니다. 자산 수치가 기하급수적으로 증가하며, 시스템 소음이 발생하기 시작합니다.",
+    video: "media/s2.mp4",
+    choices: [
+      { text: "가속 모드: 최대 출력 복제", effect: { asset: 200, greed: 40, noise: 20 }, next: "s3", action: "start" },
+      { text: "안정 모드: 저전력 유지", effect: { asset: 50, karma: 15 }, next: "s3", action: "stop" }
+    ]
+  },
+  s3: {
+    title: "PHASE 03 : 강탈과 억압",
+    desc: "외부 개입 감지. 관리자 'JACK'이 소유권을 주장하며 접근합니다.\n\"이 지하 구역의 모든 데이터는 내 것이다.\"",
+    video: "media/s3.mp4",
+    choices: [
+      { text: "관리자 권한 방어 및 대항", effect: { karma: 15 }, next: "s4", action: "stop" },
+      { text: "자산 데이터 일부 전송 (회유)", effect: { asset: -100, greed: 20 }, next: "s4", action: "start" }
+    ]
+  },
+  s4: {
+    title: "PHASE 04 : 복제 대재앙",
+    desc: "생체 데이터 유입! 아버지가 수조에 빠지며 인과율 오류가 발생했습니다.\n수백 명의 아버지가 데이터화되어 쏟아집니다.",
+    video: "media/s4.mp4",
+    choices: [
+      { text: "수조 파괴 및 프로세스 종료", effect: { asset: 0, karma: 40 }, next: "s5", action: "stop" },
+      { text: "오류 무시 및 복제 자산 수거", effect: { greed: 50, noise: 50 }, next: "s5", action: "start" }
+    ]
+  },
+  s5: {
+    title: "FINAL : 신령의 심판",
+    desc: "최상위 개체 '소년'이 강림했습니다.\n당신의 업보와 탐욕의 무게를 대조하여 최종 로그를 출력합니다.",
+    video: "media/s5.mp4",
+    choices: [
+      { text: "최종 리포트 열람", next: "final" }
+    ]
+  }
+};
+
+const endings = {
+  happy: {
+    title: "END A : 해피엔딩",
+    desc: "선명한 업보를 증명했습니다. 당신은 수조의 정당한 관리자로 승인되었습니다.\nK와 아버지가 손을 잡고, 신령이 미소를 지으며 빛가루를 뿌립니다.",
+    video: "media/enda.mp4"
+  },
+  normal: {
+    title: "END B : 노멀엔딩",
+    desc: "모든 데이터가 소실되었습니다. 수조는 청록빛 파편으로 산산조각 났습니다.\n빈손으로 돌아가지만, K의 얼굴엔 홀가분한 미소가 남습니다.",
+    video: "media/endb.mp4"
+  },
+  bad: {
+    title: "G_OVER : 배드엔딩",
+    desc: "탐욕의 임계점을 넘었습니다. 당신의 존재 정보는 심연으로 영구 격리됩니다.\n어둠 속에서 잭이 악랄한 미소를 지으며 수조를 차지합니다.",
+    video: "media/gover.mp4"
+  }
+};
+
+function updateUI() {
+  document.getElementById("karma").innerText = state.karma;
+  document.getElementById("greed").innerText = state.greed;
+  document.getElementById("asset").innerText = state.asset;
+  document.getElementById("noise").innerText = state.noise;
+  const container = document.getElementById('game-container');
+  if (state.isError) container.classList.add('error-mode');
+  else container.classList.remove('error-mode');
+}
+
+function renderScene(id) {
+  if (id === "final") return calculateEnding();
+  const scene = scenes[id];
+  document.getElementById("scene-title").innerText = scene.title;
+  document.getElementById("description").innerText = scene.desc;
+  const video = document.getElementById("game-video");
+  const placeholder = document.getElementById("placeholder");
+  video.src = scene.video;
+  video.style.display = "block";
+  placeholder.style.display = "none";
+  video.play().catch(() => {});
+  const box = document.getElementById("choices");
+  box.innerHTML = "";
+  scene.choices.forEach(c => {
+    const b = document.createElement("button");
+    b.innerText = c.text;
+    b.onclick = () => {
+      if (c.effect) { for (let k in c.effect) state[k] += c.effect[k]; }
+      if (c.action === "start") state.isError = true;
+      if (c.action === "stop") state.isError = false;
+      updateUI();
+      renderScene(c.next);
+    };
+    box.appendChild(b);
+  });
+}
+
+function calculateEnding() {
+  let selectedEnding;
+  if (state.karma >= 40 && state.greed < 30) {
+    selectedEnding = endings.happy;
+  } else if (state.greed >= 60 || state.noise >= 20) {
+    selectedEnding = endings.bad;
+  } else {
+    selectedEnding = endings.normal;
+  }
+  document.getElementById("scene-title").innerText = selectedEnding.title;
+  document.getElementById("description").innerText = selectedEnding.desc;
+  const video = document.getElementById("game-video");
+  const placeholder = document.getElementById("placeholder");
+  video.src = selectedEnding.video;
+  video.style.display = "block";
+  placeholder.style.display = "none";
+  video.play().catch(() => {});
+  document.getElementById("choices").innerHTML = '<button onclick="location.reload()">RESTART SYSTEM</button>';
+  state.isError = false;
+  updateUI();
+}
+
+function startSystem() {
+  const overlay = document.getElementById("boot-overlay");
+  overlay.classList.add("is-hidden");
+  renderScene("s1");
+}
+
+updateUI();
+</script>
+</body>
+</html>
